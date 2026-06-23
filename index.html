@@ -1,1 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracker de Pendientes</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f7f7f5;--bg3:#f1efe8;
+  --text:#1a1a18;--text2:#5f5e5a;--text3:#888780;
+  --border:rgba(0,0,0,0.11);--border2:rgba(0,0,0,0.2);
+  --purple:#3C3489;--purple-bg:#EEEDFE;--purple-t:#26215C;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-t:#0C447C;
+  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-t:#633806;
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-t:#27500A;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-t:#791F1F;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-t:#085041;
+  --coral:#993C1D;--coral-bg:#FAECE7;--coral-t:#4A1B0C;
+  --r-md:8px;--r-lg:12px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#252523;--bg3:#2c2c2a;
+  --text:#f0ede8;--text2:#b4b2a9;--text3:#888780;
+  --border:rgba(255,255,255,0.11);--border2:rgba(255,255,255,0.2);
+  --purple:#AFA9EC;--purple-bg:#26215C;--purple-t:#EEEDFE;
+  --blue:#85B7EB;--blue-bg:#042C53;--blue-t:#E6F1FB;
+  --amber:#EF9F27;--amber-bg:#412402;--amber-t:#FAEEDA;
+  --green:#97C459;--green-bg:#173404;--green-t:#EAF3DE;
+  --red:#F09595;--red-bg:#501313;--red-t:#FCEBEB;
+  --teal:#5DCAA5;--teal-bg:#04342C;--teal-t:#E1F5EE;
+  --coral:#F0997B;--coral-bg:#4A1B0C;--coral-t:#FAECE7;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);font-size:14px;min-height:100vh}
+.app{max-width:920px;margin:0 auto;padding:1.5rem 1rem 4rem}
+.app-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1.25rem}
+.app-title{font-size:18px;font-weight:500;display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--bg2);border-radius:var(--r-md);padding:10px 14px}
+.stat-l{font-size:11px;color:var(--text3);margin-bottom:2px}
+.stat-v{font-size:22px;font-weight:500}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.fb{font-size:12px;padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer}
+.fb.on{background:var(--purple-bg);border-color:var(--purple);color:var(--purple-t)}
+.search-wrap{display:flex;gap:8px;margin-bottom:1rem}
+.search-wrap input{flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r-md);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit}
+.btn{font-size:12px;padding:7px 14px;border-radius:var(--r-md);border:1px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn-primary:hover{background:#534AB7}
+.btn-sm{font-size:11px;padding:4px 10px}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:8px;overflow:hidden}
+.card-top-row{display:flex;cursor:pointer}
+.card-top-row:hover{background:var(--bg2)}
+.pri-bar{width:4px;flex-shrink:0;align-self:stretch;border-radius:0}
+.pri-critica-bar{background:#E24B4A}
+.pri-alta-bar{background:var(--red)}
+.pri-media-bar{background:var(--amber)}
+.pri-baja-bar{background:var(--border2)}
+.card-top-inner{flex:1;padding:11px 12px 9px}
+.card-chevron{padding:13px 14px 0;color:var(--text3);font-size:15px;flex-shrink:0}
+.card-title{font-size:14px;font-weight:500;line-height:1.3;margin-bottom:5px}
+.card-pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.pill{font-size:11px;padding:2px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.p-critica{background:#F09595;color:var(--red-t);font-weight:500}
+.p-alta{background:var(--red-bg);color:var(--red-t)}
+.p-media{background:var(--amber-bg);color:var(--amber-t)}
+.p-baja{background:var(--bg3);color:var(--text3)}
+.p-dev{background:var(--coral-bg);color:var(--coral-t)}
+.p-ventas{background:var(--teal-bg);color:var(--teal-t)}
+.p-area{background:var(--bg3);color:var(--text2)}
+.p-error{background:var(--red-bg);color:var(--red-t);font-weight:500}
+.p-error{background:var(--red-bg);color:var(--red-t);font-weight:500}
+.p-stage{background:var(--purple-bg);color:var(--purple-t)}
+.p-stage-0{background:var(--amber-bg);color:var(--amber-t)}
+.p-stage-done{background:var(--green-bg);color:var(--green-t)}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--purple);border-radius:2px;transition:width 0.3s}
+.card-body{border-top:1px solid var(--border);padding:0 16px 12px}
+.hist-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:10px 0 6px;display:flex;align-items:center;gap:5px}
+.hist-row{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.hist-row:last-of-type{border-bottom:none}
+.hist-date{color:var(--text3);white-space:nowrap;min-width:135px;padding-top:2px;font-size:11px}
+.hist-tag{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.ht-s1{background:var(--amber-bg);color:var(--amber-t)}
+.ht-s2{background:var(--blue-bg);color:var(--blue-t)}
+.ht-s3{background:var(--purple-bg);color:var(--purple-t)}
+.ht-s4{background:var(--teal-bg);color:var(--teal-t)}
+.ht-s5{background:var(--coral-bg);color:var(--coral-t)}
+.ht-s6{background:var(--green-bg);color:var(--green-t)}
+.ht-s7{background:var(--red-bg);color:var(--red-t)}
+.ht-s8{background:var(--green-bg);color:var(--green-t);font-weight:500}
+.hist-det{color:var(--text2);flex:1;line-height:1.4}
+.hist-del{color:var(--text3);cursor:pointer;padding:0 2px;font-size:13px;flex-shrink:0}
+.hist-del:hover{color:var(--red)}
+.card-actions{display:flex;gap:6px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);margin-top:6px}
+.empty{text-align:center;padding:2.5rem;color:var(--text3);background:var(--bg);border-radius:var(--r-lg);border:1px dashed var(--border2)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;overflow-y:auto;padding:1.5rem 1rem}
+.modal-overlay.show{display:block}
+.modal{background:var(--bg);border-radius:var(--r-lg);border:1px solid var(--border2);padding:1.5rem;width:100%;max-width:520px;margin:0 auto}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:6px}
+.field{margin-bottom:10px}
+.field label{font-size:12px;color:var(--text2);display:block;margin-bottom:3px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-md);font-size:13px;background:var(--bg);color:var(--text);font-family:inherit}
+.field textarea{resize:vertical;min-height:52px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sform{border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;background:var(--bg2)}
+.sform-title{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.sform label{font-size:11px;color:var(--text3);display:block;margin-bottom:2px}
+.sform input,.sform textarea{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-md);font-size:12px;background:var(--bg);color:var(--text);font-family:inherit;margin-bottom:6px}
+.sform textarea{resize:vertical;min-height:44px}
+.entry-row{display:flex;gap:6px;align-items:flex-start;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:7px 8px;margin-bottom:5px}
+.entry-row-fields{flex:1;display:flex;flex-direction:column;gap:4px}
+.entry-row-fields input,.entry-row-fields textarea{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--text);font-family:inherit;margin:0}
+.entry-row-fields textarea{resize:vertical;min-height:40px}
+.add-entry-btn{font-size:11px;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:3px;padding:3px 0;background:none;border:none;font-family:inherit}
+.add-entry-btn:hover{color:var(--purple)}
+.opt-toggle{display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;color:var(--text2);margin-bottom:7px}
+.opt-toggle input{width:auto;cursor:pointer}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.pager{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 0;color:var(--text3);font-size:13px}
+.closed-toggle{font-size:12px;color:var(--text3);cursor:pointer;display:flex;align-items:center;gap:5px;padding:8px 0;margin-top:1rem}
+.closed-toggle:hover{color:var(--text2)}
 
+.dias-badge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;font-weight:500;display:inline-flex;align-items:center;gap:3px}
+.dias-hoy{background:#FDEDEC;color:#C0392B;border:1px solid #E74C3C}
+.dias-ayer{background:#FEF9E7;color:#B7770D;border:1px solid #F1C40F}
+.dias-2{background:#FDF2E9;color:#9C4A1A;border:1px solid #E67E22}
+.dias-semana{background:#FDFEFE;color:#555;border:1px solid #BDC3C7}
+.dias-viejo{background:#F9EBEA;color:#922B21;border:1px solid #C0392B}
+.dias-nuevo{background:#EAFAF1;color:#1E8449;border:1px solid #27AE60}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="app-header">
+    <div class="app-title"><i class="ti ti-clipboard-check" aria-hidden="true"></i> Tracker de pendientes</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="exportTxt()"><i class="ti ti-download" aria-hidden="true"></i> Exportar evidencia</button>
+      <button class="btn" id="btn-excel" onclick="exportExcel()" style="background:#1E8449;border-color:#1E8449;color:#fff"><i class="ti ti-table-export" aria-hidden="true"></i> Exportar Excel</button>
+      <button class="btn btn-primary" onclick="openNew()"><i class="ti ti-plus" aria-hidden="true"></i> Nuevo pendiente</button>
+    </div>
+  </div>
+  <div class="stats-grid" id="stats"></div>
+  <div class="filters" id="filters">
+    <button class="fb on" data-f="all">Todos</button>
+    <button class="fb" data-f="critica">Críticos</button>
+    <button class="fb" data-f="alta">Alta prioridad</button>
+    <button class="fb" data-f="dev">Desarrollo</button>
+    <button class="fb" data-f="ventas">Con Ventas</button>
+    <button class="fb" data-f="error">Errores</button>
+  </div>
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="Buscar por asunto, área, cliente..." oninput="render()">
+    <button class="btn" onclick="document.getElementById('search').value='';render()"><i class="ti ti-x" aria-hidden="true"></i></button>
+  </div>
+  <div id="list"></div>
+  <div class="pager" id="pager"></div>
+  <div class="closed-toggle" onclick="toggleClosed()">
+    <i class="ti ti-chevron-right" id="closed-icon" aria-hidden="true"></i>
+    <span id="closed-label">Ver cerrados (0)</span>
+  </div>
+  <div id="closed-list" style="display:none"></div>
+</div>
+
+<!-- Modal nuevo / editar -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3><i class="ti ti-clipboard-plus" aria-hidden="true"></i> <span id="modal-title">Nuevo pendiente</span></h3>
+    <div class="field"><label>Asunto / descripción *</label><input id="f-desc" placeholder="Describe el pendiente..."></div>
+    <div class="field-row">
+      <div class="field"><label>Área / empresa</label><input id="f-area" placeholder="Ej: Infineon, JAE..."></div>
+      <div class="field"><label>Prioridad</label>
+        <select id="f-pri"><option value="critica">Crítica</option><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Tipo</label>
+        <select id="f-tipo" onchange="toggleDev()"><option value="soporte">Soporte</option><option value="dev">Desarrollo</option></select>
+      </div>
+      <div class="field"><label>¿Es un error?</label>
+        <select id="f-es-error" onchange="toggleError()"><option value="no">No</option><option value="si">Sí — es un error</option></select>
+      </div>
+    </div>
+    <div id="error-section" style="display:none">
+      <div class="sform" style="border-color:var(--red);background:var(--red-bg)">
+        <div class="sform-title" style="color:var(--red-t)"><i class="ti ti-bug" aria-hidden="true"></i> Detalle del error</div>
+        <label style="color:var(--red-t)">Tipo de error</label>
+        <input id="f-error-tipo" placeholder="Ej: Error de sistema, Bug, Transmisión, Layout..." style="margin-bottom:6px">
+        <label style="color:var(--red-t)">Quién lo reportó</label>
+        <input id="f-error-quien" placeholder="Nombre o empresa que reportó el error..." style="margin-bottom:6px">
+        <label style="color:var(--red-t)">Descripción del error</label>
+        <textarea id="f-error-desc" placeholder="Describe qué ocurre, en qué módulo, desde cuándo..." style="min-height:56px"></textarea>
+      </div>
+    </div>
+
+    <div id="stages-form"></div>
+
+    <div class="field"><label>Notas internas</label><textarea id="f-notes" placeholder="Contexto extra, acuerdos verbales..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="save()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal seguimiento rápido -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal" style="max-width:440px">
+    <h3><i class="ti ti-plus" aria-hidden="true"></i> Agregar seguimiento</h3>
+    <div class="field"><label>Etapa</label>
+      <select id="lm-type">
+        <option value="s1">Etapa 1 — Solicitud inicial del cliente</option>
+        <option value="s2">Etapa 2 — Seguimiento con programación</option>
+        <option value="s3">Etapa 3 — Seguimiento con supervisor</option>
+        <option value="s4">Etapa 4 — Confirmación con Ventas</option>
+        <option value="s5">Etapa 5 — Seguimiento con el cliente</option>
+        <option value="s6">Etapa 6 — Confirmación del cliente</option>
+        <option value="s7">Etapa 7 — Autorización de horas</option>
+        <option value="s8">Etapa 8 — Cierre</option>
+      </select>
+    </div>
+    <div class="field"><label>Detalle</label><textarea id="lm-det" placeholder="Describe qué se hizo, con quién, resultado..."></textarea></div>
+    <div class="field"><label>Fecha y hora</label><input type="datetime-local" id="lm-date"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeLM()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveLM()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var items=[{"desc": "ERROR WEB.- ACTUALIZACION UMT EN BASE A ARCHIVO AGENCIA", "area": "SOLUM", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-03-13T14:49", "d": "Revisando Consulta Diferencias del modulo de Reestructuras, detectamos Dif. En Cant. UMT. Pedimento: 6003210, Partida: 3"}, {"k": "s2", "f": "2026-05-18T13:25", "d": "Me apoyan con el error detectado en la WEB. Al corregir no se refleja hasta nivel de partidas de factura."}, {"k": "s2", "f": "2026-05-18T18:08", "d": "Di de alta el folio 7973. Ticket y solicitante por favor."}, {"k": "s2", "f": "2026-05-19T17:37", "d": "Solicita: Bertha Rodriguez. Ticket: 150682-IX-11"}, {"k": "s2", "f": "2026-06-16T01:04", "d": "En seguimiento, confirmas si se incluirá en la siguiente actualización de la WEB."}], "esError": true, "errorTipo": "Apoyo Revision Consultas Diferencias", "errorQuien": "Bertha Rodriguez", "errorDesc": "Dif. En Cant. UMT en módulo de Reestructuras. Pedimento: 6003210, Partida: 3", "id": "mqhffqk64wv1xzv3ueu", "created": "2026-06-17T02:03:24.342Z"}, {"desc": "VISUALIZACIÓN TIPO DE OPERACIÓN NO CUMPLE FILTRO EN DASHBOARD", "area": "THOMSON", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-05-27T14:45", "d": "La gráfica de pastel no se refresca con las cantidades del filtro aplicado."}, {"k": "s5", "f": "2026-05-28T11:53", "d": "En seguimiento a su correo, ya nos encontramos revisando lo solicitado."}, {"k": "s2", "f": "2026-05-28T12:00", "d": "Al aplicar filtro en Dashboard, la gráfica de pastel de tipo de operación no se actualiza."}, {"k": "s2", "f": "2026-06-05T11:59", "d": "En seguimiento, algún comentario?"}, {"k": "s3", "f": "2026-06-15T18:00", "d": "Se mencionó a Vero este punto vía Teams."}, {"k": "s2", "f": "2026-06-16T12:57", "d": "Algún comentario a este punto?"}, {"k": "s2", "f": "2026-06-19T10:57", "d": "Ya se corrigió el detalle en la plataforma Dashboard y ya se muestra la gráfica de manera correcta."}, {"k": "s6", "f": "2026-06-19T16:09", "d": "El cambio ya ha sido realizado, me apoya realizando una prueba por favor."}, {"k": "s6", "f": "2026-06-22T08:45", "d": "En seguimiento al Dashboard, se informa que el viernes pasado se envió correo de confirmación indicando que el filtrado había quedado solventado."}, {"k": "s8", "f": "2026-06-22T08:52", "d": "Si, muchas gracias Nataly ya quedó solucionado."}], "esError": true, "errorTipo": "Filtro Dashboard no actualiza gráfica", "errorQuien": "LUPITA", "errorDesc": "Al aplicar filtro en Dashboard, la gráfica de pastel no se actualiza aunque el resto de elementos sí responden.", "id": "mqhf8y66h0ulkvzbqcs", "created": "2026-06-17T01:58:07.614Z"}, {"desc": "UNIFICACIÓN DE INCREMENTABLES — PLATAFORMA MV", "area": "EZI", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-05-14T01:42", "d": "No se desglosan los conceptos en la MVE al momento de elaborarla."}, {"k": "s3", "f": "2026-06-01T12:00", "d": "TEAM: Vero confirmas cuando tengas oportunidad para revisar el tema de EZI."}, {"k": "s3", "f": "2026-06-01T17:15", "d": "Codigos confirmados: Fletes: INCRE.GS, Seguros: INCRE.GS, Embalajes: INCRE.GT, Otros: INCRE.VC"}, {"k": "s3", "f": "2026-06-03T07:52", "d": "Buenos dias Vero, has podido revisar con Mario?"}, {"k": "s2", "f": "2026-06-03T13:27", "d": "Cliente EZI pagó programación para prorrateo. Todos los incrementables se unifican en uno solo. Requiere 4 horas."}, {"k": "s2", "f": "2026-06-11T13:12", "d": "Dando seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-06-12T09:02", "d": "Se adjunta documentación correspondiente."}, {"k": "s3", "f": "2026-06-12T10:53", "d": "Compartí documentación a Vero para que la compartiera a Marce."}, {"k": "s2", "f": "2026-06-16T18:48", "d": "Para cuándo podría estar aplicado el desarrollo?"}, {"k": "s3", "f": "2026-06-22T11:00", "d": "Conexión con programación para confirmar un dato de la configuración que solicitan."}, {"k": "s5", "f": "2026-06-22T11:09", "d": "La programación se encuentra en proceso. Se intentó comunicar a Melissa y Graciela sin éxito. Se dejó mensaje vía WhatsApp solicitando llamada breve para confirmar dato que programación requiere."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqhewn5h6n6lve5gj9n", "created": "2026-06-17T01:48:33.461Z"}, {"desc": "REPORTE DE LISTADO DE PEDIMENTOS", "area": "AVERY", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-06-12T01:04", "d": "Pedimento de exportación donde se descargaron los pedimentos de importación."}, {"k": "s2", "f": "2026-06-15T12:44", "d": "Se solicita apoyo para confirmar tiempo requerido para generar reporte de Descargos 2021."}, {"k": "s3", "f": "2026-06-15T18:07", "d": "Se comentó a Vero este punto (Listado de Pendientes)."}, {"k": "s2", "f": "2026-06-16T18:23", "d": "Se solicita extracción desde BD del cliente. Se adjunta consulta SQL."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqhdgcz3rysk8vdhgg", "created": "2026-06-17T01:07:54.159Z"}, {"desc": "BUG (TC Metal) Demora Plataforma Manifestacion de Valor", "area": "TC METAL", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-06-09T17:08", "d": "MVE: Error al procesar. Al cerrar y volver a abrir el folio aparece correctamente."}, {"k": "s2", "f": "2026-06-09T19:31", "d": "Se adjuntan descripción del BUG y video. Junio 9, 2026."}], "esError": true, "errorTipo": "Demora sobre la Digitalizacion", "errorQuien": "Leonardo Chamorro", "errorDesc": "MVE: Error al procesar.", "id": "mqh0dtyj9vrdtvdij46", "created": "2026-06-16T19:02:01.195Z"}, {"desc": "Mejora (TC Metal)", "area": "TC METAL", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s2", "f": "2026-06-10T09:35", "d": "Se adjunta documentación de mejora TC Metal: cálculo de peso masivo."}, {"k": "s1", "f": "2026-06-10T18:27", "d": "Al cargar el BOM, dar de alta manualmente el peso es laborioso."}, {"k": "s3", "f": "2026-06-16T11:30", "d": "Se dejó mensaje en Teams con seguimiento."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqgz98jmel3yo9bri6c", "created": "2026-06-16T18:30:27.202Z"}, {"desc": "Bench| Solicitud de reporte HTS US (ECCN, LICENSE, ELE)", "area": "BENCH TIJUANA", "priority": "media", "tipo": "dev", "ventas": true, "notes": "Renombrar: Catalogo MP + ECCN + LIC + ELE, Catalogo MAQ + ECCN + LIC + ELE, Catalogo PT + ECCN + LIC + ELE", "logs": [{"k": "s1", "f": "2026-06-10T10:10", "d": "Adicionar ECCN, LICENSE, ELE, HTS US al reporte de catálogos."}, {"k": "s2", "f": "2026-06-15T10:05", "d": "Me apoya con lo que solicita BENCH."}, {"k": "s3", "f": "2026-06-15T11:23", "d": "Se revisó con Vero."}, {"k": "s6", "f": "2026-06-16T10:10", "d": "Solicitud para tener lista la mejora el viernes 19 de junio."}, {"k": "s2", "f": "2026-06-16T11:22", "d": "Se solicita confirmar si el plazo es viable."}, {"k": "s5", "f": "2026-06-16T12:19", "d": "Se generará reporte con campos solicitados."}, {"k": "s5", "f": "2026-06-16T12:26", "d": "Quedo en espera de horas y saldo disponible."}, {"k": "s4", "f": "2026-06-16T12:54", "d": "Autorización a Andrea: 3 reportes con ECCN, LICENSE, ELE, HTS US. Tiempo: 3 horas."}, {"k": "s2", "f": "2026-06-16T13:23", "d": "Comparto consultas. Tiempo: 2 horas de Soporte."}, {"k": "s4", "f": "2026-06-16T15:39", "d": "Tiempo: 2 horas de programación. 23 horas disponibles."}, {"k": "s7", "f": "2026-06-16T15:53", "d": "Autorizado el uso de 2 horas de programación."}, {"k": "s8", "f": "2026-06-17T10:41", "d": "Entrega realizada: 309 Catalogo MP, 310 Catalogo PT, 311 Catalogo AF. Pruebas exitosas con columnas ECCN, LICENCE y ELE."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqgz1nagrlyqjunzder", "created": "2026-06-16T18:24:33.064Z"}, {"desc": "CAMBIO DE REGISTROS EN FUNCIÓN TRANSMISIÓN BROKER", "area": "MECALUX", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-05-19T15:19", "d": "Configurar archivo para transmisión US al broker americano en Matamoros."}, {"k": "s2", "f": "2026-05-26T10:32", "d": "Cambio en MECALUX: código de agencia vinculado a dirección de envío. Afecta registros A y MF01."}, {"k": "s2", "f": "2026-06-02T12:04", "d": "Algún comentario."}, {"k": "s2", "f": "2026-06-11T16:47", "d": "Naty complemente el requerimiento."}, {"k": "s2", "f": "2026-06-11T17:07", "d": "Detalle: código AG US vinculado a dirección de envío. Afecta A (Sender Code) y MF01 (Client Code)."}, {"k": "s2", "f": "2026-06-15T14:12", "d": "Ya se pasó el tiempo a Andrea."}, {"k": "s2", "f": "2026-06-15T17:04", "d": "En seguimiento, algún comentario?"}, {"k": "s3", "f": "2026-06-15T19:19", "d": "Veronica contestó a correo en seguimiento."}, {"k": "s2", "f": "2026-06-18T14:12", "d": "Tiempo: 2 horas programación. Cliente tiene horas de soporte — 3 horas del ticket 105917-IX-19."}, {"k": "s3", "f": "2026-06-18T14:30", "d": "Reasigna este pendiente a Kevin."}, {"k": "s5", "f": "2026-06-18T15:45", "d": "2 horas de programación + 1 hora de soporte."}, {"k": "s7", "f": "2026-06-18T16:01", "d": "Confirmado tiempo autorizado para considerarlo de nuestra póliza."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqgsn0itu1v725iwhve", "created": "2026-06-16T15:25:12.677Z"}, {"desc": "SALDOS CON DECIMALES — CAMBIO DE RÉGIMEN AUTOMÁTICO", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-05-28T11:20", "d": "Saldo .36 GAL no puede ajustarse. Saldos ajustados no se actualizan en reporte."}, {"k": "s2", "f": "2026-05-28T17:26", "d": "Error en descargas automáticas F4: saldos residuales no ajustables. Procedimiento: sp_SaldoNoParteACREG."}, {"k": "s2", "f": "2026-06-05T11:57", "d": "En seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-06-06T10:49", "d": "Ya se le mandó el procedimiento a Carlos."}, {"k": "s2", "f": "2026-06-11T22:32", "d": "Agradezco, doy seguimiento con Carlos."}, {"k": "s3", "f": "2026-06-15T08:17", "d": "Se envió listado a Veronica."}, {"k": "s2", "f": "2026-06-15T13:01", "d": "En seguimiento, algún comentario?"}, {"k": "s3", "f": "2026-06-22T09:00", "d": "Revisión con Veronica este pendiente, me pidió dejarle mensaje a Carlos y evidencia por correo."}, {"k": "s2", "f": "2026-06-22T16:04", "d": "Dando seguimiento, le comento que le dejé mensaje vía Teams a Carlos para apoyo."}], "esError": true, "errorTipo": "SALDOS CON DECIMALES", "errorQuien": "Marlen Enriquez", "errorDesc": "Saldos con decimales generados al ejecutar cambio de régimen automático.", "id": "mqgsdbdx69ixgl9m5u", "created": "2026-06-16T15:17:40.197Z"}, {"desc": "ERROR LACEYACT", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-04-08T12:20", "d": "Pruebas sobre módulo de Lacey Act. Confirmar fechas de corte en el layout."}, {"k": "s2", "f": "2026-06-11T14:08", "d": "Programación RSI no liberada por detalles no cumplidos. Se solicita apoyo urgente."}, {"k": "s2", "f": "2026-06-15T13:04", "d": "Algún comentario en seguimiento?"}, {"k": "s3", "f": "2026-06-15T13:04", "d": "Se envió notificación a Veronica."}], "esError": true, "errorTipo": "Error en módulo LaceyAct", "errorQuien": "Diana Gaytan", "errorDesc": "Sistema genera BOM por cada Descripción y todos los marca por default.", "id": "mqgs0w4nnv8xio2iq9p", "created": "2026-06-16T15:08:00.551Z"}, {"desc": "SOLICITUD - ALERTA PARA COSTOS EN FACTURA", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-05-21T10:32", "d": "Confirmo documentacion correcto."}, {"k": "s2", "f": "2026-06-10T17:38", "d": "Se solicita apoyo para revisar desarrollo RSI. Ticket: 131959-IX-17."}, {"k": "s2", "f": "2026-06-11T16:15", "d": "Apoyo para dar seguimiento y enviar comentarios al cliente."}, {"k": "s2", "f": "2026-06-15T13:03", "d": "Me apoyan, necesito enviar retroalimentación al cliente."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqga0vbb6ttn9cimpkd", "created": "2026-06-16T06:44:06.407Z"}, {"desc": "Programacion Especial Solicitada por RSI (Precios Estimados)", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "notes": "", "logs": [{"k": "s1", "f": "2026-04-15T07:57", "d": "Confirmo documentación correcta."}, {"k": "s2", "f": "2026-04-16T19:37", "d": "Me apoyan con la solicitud de mejora."}, {"k": "s2", "f": "2026-04-21T12:02", "d": "En seguimiento, me confirmas si han tenido oportunidad de validarlo?"}, {"k": "s2", "f": "2026-04-27T13:16", "d": "En seguimiento, agradeceré sus comentarios."}, {"k": "s2", "f": "2026-05-04T18:30", "d": "Se dio de alta el folio 7949."}, {"k": "s2", "f": "2026-05-08T09:50", "d": "Algún comentario."}, {"k": "s2", "f": "2026-05-12T17:32", "d": "Algún comentario en seguimiento?"}, {"k": "s2", "f": "2026-05-19T17:07", "d": "El cliente requiere retroalimentación."}, {"k": "s2", "f": "2026-05-20T10:14", "d": "En seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-05-22T17:19", "d": "Algún comentario."}, {"k": "s2", "f": "2026-05-25T17:53", "d": "En seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-05-29T16:17", "d": "Ya tenemos algún comentario?"}, {"k": "s2", "f": "2026-06-01T22:04", "d": "Necesito enviar retroalimentación."}, {"k": "s2", "f": "2026-06-02T10:10", "d": "Ya se está revisando con programación."}, {"k": "s2", "f": "2026-06-02T15:13", "d": "Observaciones marcadas en azul."}, {"k": "s2", "f": "2026-06-04T17:02", "d": "Se confirman puntos de documentación."}, {"k": "s2", "f": "2026-06-09T10:55", "d": "Se van a revisar los comentarios con programación."}, {"k": "s2", "f": "2026-06-11T16:16", "d": "En seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-06-11T16:32", "d": "Está en los pendientes para revisar."}, {"k": "s2", "f": "2026-06-11T20:29", "d": "El cliente sigue pidiendo retroalimentación."}, {"k": "s3", "f": "2026-06-11T23:40", "d": "Se notificó vía Teams."}, {"k": "s3", "f": "2026-06-15T06:40", "d": "Se envió otro Teams."}, {"k": "s2", "f": "2026-06-15T12:52", "d": "Algún comentario?"}, {"k": "s3", "f": "2026-06-16T16:00", "d": "Revisión con Vero de documentación."}, {"k": "s2", "f": "2026-06-16T16:14", "d": "Se adjunta documentación con cambios y tabla Anexo 5."}, {"k": "s3", "f": "2026-06-16T16:17", "d": "Se envía documentación RSI. Se solicita confirmación del tiempo."}, {"k": "s3", "f": "2026-06-22T13:10", "d": "En seguimiento vía Teams, se informa que ya se cuentan con los tiempos. Se solicita confirmar fecha estimada para envío de propuesta de inversión al cliente."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqg9r6pzd2v8t75ovi5", "created": "2026-06-16T06:36:34.631Z"}, {"desc": "Desarrollo.- Agregar Partida en Descargas de Activo Fijo", "area": "INTUITIVE", "priority": "media", "tipo": "dev", "ventas": true, "notes": "", "logs": [{"k": "s1", "f": "2026-03-17T08:34", "d": "Solicitud para agregar partida de pedimento en descargas de activo fijo."}, {"k": "s2", "f": "2026-04-09T08:51", "d": "Se solicita apoyo para validar tiempos y generar propuesta para Intuitive."}, {"k": "s2", "f": "2026-04-15T12:29", "d": "En seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-05-25T07:56", "d": "Dando seguimiento, algún comentario?"}, {"k": "s2", "f": "2026-05-26T17:06", "d": "Sugerencias: agregar FEDET_Consec y Fidet_Consec. Implican cambio de versión."}, {"k": "s2", "f": "2026-06-01T22:06", "d": "Confirmado, se procede. Se solicita apoyo para enviar propuesta al cliente."}, {"k": "s4", "f": "2026-06-04T12:27", "d": "Se compartió propuesta de cotización al cliente Yiza Maya de Intuitive."}, {"k": "s2", "f": "2026-06-04T12:34", "d": "Ya se pasaron los tiempos a Andrea."}, {"k": "s6", "f": "2026-06-05T14:07", "d": "Cliente responde: Gracias, permítame revisarlo con el equipo."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqg97nhltxspv5u41y", "created": "2026-06-16T06:21:23.241Z"}, {"desc": "Configuracion archivo.DAT Importacion/Exportacion", "area": "JAE Tijuana", "priority": "media", "tipo": "soporte", "ventas": true, "notes": "Revisar con Ventas el paquete. No está el Ticket registrado y tampoco ha confirmado Ventas.", "logs": [{"k": "s1", "f": "2026-04-28T16:08", "d": "Pruebas con CASAS sin inconvenientes. Ticket: 92751-IX-17. Solicitante: Rodrigo Arreola."}, {"k": "s2", "f": "2026-04-30T08:30", "d": "Apoyo con ajuste BROKER Exportacion: doble espacio en IV22, costo unitario con decimal."}, {"k": "s2", "f": "2026-05-04T10:17", "d": "Seguimiento. Han tenido oportunidad de revisarlo?"}, {"k": "s2", "f": "2026-05-08T08:00", "d": "Algún comentario? El cliente ya solicita respuesta."}, {"k": "s2", "f": "2026-05-19T18:54", "d": "Se solicita apoyo. Cliente pide estatus."}, {"k": "s2", "f": "2026-05-20T10:13", "d": "Algún comentario?"}, {"k": "s2", "f": "2026-05-20T10:26", "d": "Programación solicita confirmar posición del costo unitario."}, {"k": "s2", "f": "2026-05-20T11:04", "d": "Cliente solicita agregar 2 espacios al layout. Requiere autorización. Ticket: 92751-IX-17."}, {"k": "s2", "f": "2026-05-20T13:28", "d": "Se compartieron tiempos a Andrea."}, {"k": "s2", "f": "2026-05-21T11:26", "d": "Tiempo: 2 horas. Ticket 92751-IX-25."}, {"k": "s5", "f": "2026-05-26T08:02", "d": "Se solicitó autorización: 2 horas programación + 1 hora soporte."}, {"k": "s6", "f": "2026-06-08T09:05", "d": "Cliente confirma paquete de 10 horas disponible."}, {"k": "s5", "f": "2026-06-15T12:40", "d": "Se procederá a validar, ya que no se cuenta con registro y ventas no ha confirmado."}, {"k": "s5", "f": "2026-06-22T09:32", "d": "Claudia se pondrá en contacto. No se cuenta con horas de servicio disponibles en este momento. Se tienen horas pendientes de confirmación sin respuesta."}], "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "id": "mqg8sqg82g2adiejdmb", "created": "2026-06-16T06:09:47.240Z"}];
+var editId=null;
+var logTarget=null;
+var curFilter='all';
+var page=0;
+var PER=15;
+var expanded={};
+var showClosed=false;
+var formEntries={};
+
+try{var _saved=localStorage.getItem('tracker_v6');if(_saved){items=JSON.parse(_saved);}else{items=[{"desc": "SOLICITUD - ALERTA PARA COSTOS EN FACTURA", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "", "logs": [{"k": "s1", "f": "2026-05-21T10:32", "d": "Buen día Nataly.\nConfirmo documentacion correcto."}, {"k": "s2", "f": "2026-06-10T17:38", "d": "Buenos días Carlos, Se solicita apoyo para revisar y validar el siguiente desarrollo de mejora solicitado por RSI. Solicita: Diana Gaytán. Ticket: 131959-IX-17. Se adjunta documentación."}, {"k": "s2", "f": "2026-06-11T16:15", "d": "Buen dia Carlos/Vero, apoyo en relación a este punto para dar seguimiento y poder enviar comentarios al cliente."}, {"k": "s2", "f": "2026-06-15T13:03", "d": "Buen dia Carlos/Vero, me apoyan de favor ya que necesito enviar retroalimentación al cliente."}], "id": "mqga0vbb6ttn9cimpkd", "created": "2026-06-16T06:44:06.407Z"}, {"desc": "Programacion Especial Solicitada por RSI (Precios Estimados)", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "", "logs": [{"k": "s1", "f": "2026-04-15T07:57", "d": "Buen día Nataly. Confirmo documentación correcta."}, {"k": "s2", "f": "2026-04-16T19:37", "d": "Buen dia Chicas, me apoyan con la solicitud de mejora que solicita el cliente para poder enviarle propuesta de desarrollo."}, {"k": "s2", "f": "2026-04-21T12:02", "d": "Buen dia Marce, en seguimiento a este punto, me confirmas si han tenido oportunidad de validarlo?"}, {"k": "s2", "f": "2026-04-27T13:16", "d": "Buen día Marce, en seguimiento a este punto, agradeceré me haga saber sus comentarios."}, {"k": "s2", "f": "2026-05-04T18:30", "d": "Buenas tardes Nataly, se dio de alta el folio 7949 lo voy a revisar con Marce y te compartimos comentarios."}, {"k": "s2", "f": "2026-05-08T09:50", "d": "Buen dia Arely/Marce, algún comentario."}, {"k": "s2", "f": "2026-05-12T17:32", "d": "Buen dia Chicas, algún comentario en seguimiento a este correo?"}, {"k": "s2", "f": "2026-05-19T17:07", "d": "Buenos días Arely y Marce, les solicito confirmarme si cuentan con algún comentario. El cliente requiere la retroalimentación."}, {"k": "s2", "f": "2026-05-20T10:14", "d": "Buen dia Arely/Marce, en seguimiento a este punto, algún comentario?"}, {"k": "s2", "f": "2026-05-22T17:19", "d": "Buen dia Marce, algún comentario en este punto."}, {"k": "s2", "f": "2026-05-25T17:53", "d": "Buen dia Marce, en seguimiento a este punto, algún comentario?"}, {"k": "s2", "f": "2026-05-29T16:17", "d": "Buen dia Marce, ya tenemos algún comentario en relación a este punto?"}, {"k": "s2", "f": "2026-06-01T22:04", "d": "Buen dia Marce, en seguimiento a este punto, se tendrá algún comentario, necesito enviar retroalimentación al cliente."}, {"k": "s2", "f": "2026-06-02T10:10", "d": "@Nataly Olivas buen día, ya se está revisando con programación."}, {"k": "s2", "f": "2026-06-02T15:13", "d": "@Nataly Olivas ya se terminó de revisar la documentación con programación y me hicieron observaciones marcadas en azul, me apoyas con eso por favor."}, {"k": "s2", "f": "2026-06-04T17:02", "d": "Buenos días Marce, se confirman los siguientes puntos de la documentación: 1. Se adjunta listado de fracciones en Excel. 2. Se confirma sugerencia correcta. 3. RSI no maneja listas de embarques de importación. 4. Unidad de medida del precio estimado corresponde a la fracción del Anexo 5. 5. Alerta indicará que no se dispone de factor de conversión. 6. No es posible documentarlo al cliente por ser desarrollo especial con pago."}, {"k": "s2", "f": "2026-06-09T10:55", "d": "@Nataly Olivas se van a revisar los comentarios con programación."}, {"k": "s2", "f": "2026-06-11T16:16", "d": "Buen dia Marce, en seguimiento a este punto, algún comentario?"}, {"k": "s2", "f": "2026-06-11T16:32", "d": "@Nataly Olivas está en los pendientes para revisar, si Edgar se desocupa hoy de Rectificadores lo voy a buscar para retomar."}, {"k": "s2", "f": "2026-06-11T20:29", "d": "Buen dia Marce, agradezco, ya que el cliente me está pidiendo retroalimentación."}, {"k": "s3", "f": "2026-06-11T23:40", "d": "Se notificó vía Teams para apoyo en el seguimiento."}, {"k": "s3", "f": "2026-06-15T06:40", "d": "Se envió otro Teams para seguimiento."}, {"k": "s2", "f": "2026-06-15T12:52", "d": "Buen dia Marce, algún comentario en relación a este punto?"}], "id": "mqg9r6pzd2v8t75ovi5", "created": "2026-06-16T06:36:34.631Z"}, {"desc": "Desarrollo.- Agregar Partida en Descargas de Activo Fijo", "area": "INTUITIVE", "priority": "media", "tipo": "dev", "ventas": true, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "", "logs": [{"k": "s1", "f": "2026-03-17T08:34", "d": "Solicitud de cliente para agregar partida de pedimento en descargas de activo fijo. Un número de parte puede tener varios pedimentos de importación con saldo disponible y varias piezas por factura."}, {"k": "s2", "f": "2026-04-09T08:51", "d": "Buen día Arely y Marcella, el cliente Intuitive solicita mejora al momento de procesar la descarga de sus activos. Se solicita apoyo para validar tiempos de desarrollo y generar propuesta."}, {"k": "s2", "f": "2026-04-15T12:29", "d": "En seguimiento a este punto, tendrán algún comentario? Ya tendremos tiempos para compartir propuesta al cliente?"}, {"k": "s2", "f": "2026-05-25T07:56", "d": "Buen dia Marce, dando seguimiento a este punto, tendrían algún comentario?"}, {"k": "s2", "f": "2026-05-26T17:06", "d": "Se revisó documentación con programación. Sugerencias: agregar FEDET_Consec y Fidet_Consec. Estos cambios implican cambio de versión. Se solicita luz verde."}, {"k": "s2", "f": "2026-06-01T22:06", "d": "Confirmado, se procederá a adicionar el punto a la documentación. Se solicita apoyo para enviar propuesta al cliente en seguimiento."}, {"k": "s4", "f": "2026-06-04T12:27", "d": "Se compartió propuesta de cotización al cliente Yiza Maya de Intuitive con detalle de mejoras en pantalla de descargos de activo fijo."}, {"k": "s2", "f": "2026-06-04T12:34", "d": "Ya se pasaron los tiempos a Andrea y estará dando seguimiento a la propuesta con el cliente."}, {"k": "s6", "f": "2026-06-05T14:07", "d": "Cliente responde: Gracias, permítame revisarlo con el equipo."}], "id": "mqg97nhltxspv5u41y", "created": "2026-06-16T06:21:23.241Z"}, {"desc": "Configuracion archivo.DAT Importacion/Exportacion", "area": "JAE Tijuana", "priority": "media", "tipo": "soporte", "ventas": false, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "Revisar con Ventas el paquete que indica el cliente. Confirmo con Ventas pero no está el Ticket registrado y tampoco ha confirmado Ventas para seguimiento.", "logs": [{"k": "s1", "f": "2026-04-28T16:08", "d": "Se realizaron pruebas con CASAS en relación con el archivo MAINX30, sin inconvenientes. Listos para realizar los cambios. Ticket: 92751-IX-17. Solicitante: Rodrigo Arreola."}, {"k": "s2", "f": "2026-04-30T08:30", "d": "Buen dia Carlos/Marce, se solicita apoyo con ajuste en BROKER de Exportacion: adicionar doble espacio en IV22 y declarar costo unitario con decimal. Adicional, validar por qué no se visualiza información del Destino Final."}, {"k": "s2", "f": "2026-05-04T10:17", "d": "Seguimiento al punto pendiente. ¿Han tenido oportunidad de revisarlo?"}, {"k": "s2", "f": "2026-05-08T08:00", "d": "¿Alguno cuenta con comentarios? El cliente ya solicita respuesta."}, {"k": "s2", "f": "2026-05-19T18:54", "d": "Se solicita apoyo con seguimiento. Cliente pide estatus y no se ha podido proporcionar actualización."}, {"k": "s2", "f": "2026-05-20T10:13", "d": "Algún comentario en seguimiento a este punto?"}, {"k": "s2", "f": "2026-05-20T10:26", "d": "Programación solicita confirmar posición del costo unitario y si se captura destino final en facturas de exportación."}, {"k": "s2", "f": "2026-05-20T11:04", "d": "Cliente solicita agregar 2 espacios al layout (posiciones 81 y 82, info a partir de posición 83). No forman parte del layout del Broker. Se requiere autorización de solicitud de cambio."}, {"k": "s2", "f": "2026-05-20T13:28", "d": "Se compartieron tiempos a Andrea para seguimiento con dirección."}, {"k": "s2", "f": "2026-05-21T11:26", "d": "Tiempo de programación: 2 horas. Se registrará en ticket 92751-IX-25 al autorizar."}, {"k": "s5", "f": "2026-05-26T08:02", "d": "Se solicitó autorización al cliente Rodrigo: 2 horas de programación y 1 hora de soporte. Se consultó si prefiere paquete de horas o facturación por evento."}, {"k": "s6", "f": "2026-06-08T09:05", "d": "Cliente confirma que cuenta con paquete de 10 horas disponible para realizar los cambios solicitados."}], "id": "mqg8sqg82g2adiejdmb", "created": "2026-06-16T06:09:47.240Z"}];persist();}}catch(e){items=[{"desc": "SOLICITUD - ALERTA PARA COSTOS EN FACTURA", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "", "logs": [{"k": "s1", "f": "2026-05-21T10:32", "d": "Buen día Nataly.\nConfirmo documentacion correcto."}, {"k": "s2", "f": "2026-06-10T17:38", "d": "Buenos días Carlos, Se solicita apoyo para revisar y validar el siguiente desarrollo de mejora solicitado por RSI. Solicita: Diana Gaytán. Ticket: 131959-IX-17. Se adjunta documentación."}, {"k": "s2", "f": "2026-06-11T16:15", "d": "Buen dia Carlos/Vero, apoyo en relación a este punto para dar seguimiento y poder enviar comentarios al cliente."}, {"k": "s2", "f": "2026-06-15T13:03", "d": "Buen dia Carlos/Vero, me apoyan de favor ya que necesito enviar retroalimentación al cliente."}], "id": "mqga0vbb6ttn9cimpkd", "created": "2026-06-16T06:44:06.407Z"}, {"desc": "Programacion Especial Solicitada por RSI (Precios Estimados)", "area": "RSI", "priority": "media", "tipo": "dev", "ventas": false, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "", "logs": [{"k": "s1", "f": "2026-04-15T07:57", "d": "Buen día Nataly. Confirmo documentación correcta."}, {"k": "s2", "f": "2026-04-16T19:37", "d": "Buen dia Chicas, me apoyan con la solicitud de mejora que solicita el cliente para poder enviarle propuesta de desarrollo."}, {"k": "s2", "f": "2026-04-21T12:02", "d": "Buen dia Marce, en seguimiento a este punto, me confirmas si han tenido oportunidad de validarlo?"}, {"k": "s2", "f": "2026-04-27T13:16", "d": "Buen día Marce, en seguimiento a este punto, agradeceré me haga saber sus comentarios."}, {"k": "s2", "f": "2026-05-04T18:30", "d": "Buenas tardes Nataly, se dio de alta el folio 7949 lo voy a revisar con Marce y te compartimos comentarios."}, {"k": "s2", "f": "2026-05-08T09:50", "d": "Buen dia Arely/Marce, algún comentario."}, {"k": "s2", "f": "2026-05-12T17:32", "d": "Buen dia Chicas, algún comentario en seguimiento a este correo?"}, {"k": "s2", "f": "2026-05-19T17:07", "d": "Buenos días Arely y Marce, les solicito confirmarme si cuentan con algún comentario. El cliente requiere la retroalimentación."}, {"k": "s2", "f": "2026-05-20T10:14", "d": "Buen dia Arely/Marce, en seguimiento a este punto, algún comentario?"}, {"k": "s2", "f": "2026-05-22T17:19", "d": "Buen dia Marce, algún comentario en este punto."}, {"k": "s2", "f": "2026-05-25T17:53", "d": "Buen dia Marce, en seguimiento a este punto, algún comentario?"}, {"k": "s2", "f": "2026-05-29T16:17", "d": "Buen dia Marce, ya tenemos algún comentario en relación a este punto?"}, {"k": "s2", "f": "2026-06-01T22:04", "d": "Buen dia Marce, en seguimiento a este punto, se tendrá algún comentario, necesito enviar retroalimentación al cliente."}, {"k": "s2", "f": "2026-06-02T10:10", "d": "@Nataly Olivas buen día, ya se está revisando con programación."}, {"k": "s2", "f": "2026-06-02T15:13", "d": "@Nataly Olivas ya se terminó de revisar la documentación con programación y me hicieron observaciones marcadas en azul, me apoyas con eso por favor."}, {"k": "s2", "f": "2026-06-04T17:02", "d": "Buenos días Marce, se confirman los siguientes puntos de la documentación: 1. Se adjunta listado de fracciones en Excel. 2. Se confirma sugerencia correcta. 3. RSI no maneja listas de embarques de importación. 4. Unidad de medida del precio estimado corresponde a la fracción del Anexo 5. 5. Alerta indicará que no se dispone de factor de conversión. 6. No es posible documentarlo al cliente por ser desarrollo especial con pago."}, {"k": "s2", "f": "2026-06-09T10:55", "d": "@Nataly Olivas se van a revisar los comentarios con programación."}, {"k": "s2", "f": "2026-06-11T16:16", "d": "Buen dia Marce, en seguimiento a este punto, algún comentario?"}, {"k": "s2", "f": "2026-06-11T16:32", "d": "@Nataly Olivas está en los pendientes para revisar, si Edgar se desocupa hoy de Rectificadores lo voy a buscar para retomar."}, {"k": "s2", "f": "2026-06-11T20:29", "d": "Buen dia Marce, agradezco, ya que el cliente me está pidiendo retroalimentación."}, {"k": "s3", "f": "2026-06-11T23:40", "d": "Se notificó vía Teams para apoyo en el seguimiento."}, {"k": "s3", "f": "2026-06-15T06:40", "d": "Se envió otro Teams para seguimiento."}, {"k": "s2", "f": "2026-06-15T12:52", "d": "Buen dia Marce, algún comentario en relación a este punto?"}], "id": "mqg9r6pzd2v8t75ovi5", "created": "2026-06-16T06:36:34.631Z"}, {"desc": "Desarrollo.- Agregar Partida en Descargas de Activo Fijo", "area": "INTUITIVE", "priority": "media", "tipo": "dev", "ventas": true, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "", "logs": [{"k": "s1", "f": "2026-03-17T08:34", "d": "Solicitud de cliente para agregar partida de pedimento en descargas de activo fijo. Un número de parte puede tener varios pedimentos de importación con saldo disponible y varias piezas por factura."}, {"k": "s2", "f": "2026-04-09T08:51", "d": "Buen día Arely y Marcella, el cliente Intuitive solicita mejora al momento de procesar la descarga de sus activos. Se solicita apoyo para validar tiempos de desarrollo y generar propuesta."}, {"k": "s2", "f": "2026-04-15T12:29", "d": "En seguimiento a este punto, tendrán algún comentario? Ya tendremos tiempos para compartir propuesta al cliente?"}, {"k": "s2", "f": "2026-05-25T07:56", "d": "Buen dia Marce, dando seguimiento a este punto, tendrían algún comentario?"}, {"k": "s2", "f": "2026-05-26T17:06", "d": "Se revisó documentación con programación. Sugerencias: agregar FEDET_Consec y Fidet_Consec. Estos cambios implican cambio de versión. Se solicita luz verde."}, {"k": "s2", "f": "2026-06-01T22:06", "d": "Confirmado, se procederá a adicionar el punto a la documentación. Se solicita apoyo para enviar propuesta al cliente en seguimiento."}, {"k": "s4", "f": "2026-06-04T12:27", "d": "Se compartió propuesta de cotización al cliente Yiza Maya de Intuitive con detalle de mejoras en pantalla de descargos de activo fijo."}, {"k": "s2", "f": "2026-06-04T12:34", "d": "Ya se pasaron los tiempos a Andrea y estará dando seguimiento a la propuesta con el cliente."}, {"k": "s6", "f": "2026-06-05T14:07", "d": "Cliente responde: Gracias, permítame revisarlo con el equipo."}], "id": "mqg97nhltxspv5u41y", "created": "2026-06-16T06:21:23.241Z"}, {"desc": "Configuracion archivo.DAT Importacion/Exportacion", "area": "JAE Tijuana", "priority": "media", "tipo": "soporte", "ventas": false, "esError": false, "errorTipo": "", "errorQuien": "", "errorDesc": "", "notes": "Revisar con Ventas el paquete que indica el cliente. Confirmo con Ventas pero no está el Ticket registrado y tampoco ha confirmado Ventas para seguimiento.", "logs": [{"k": "s1", "f": "2026-04-28T16:08", "d": "Se realizaron pruebas con CASAS en relación con el archivo MAINX30, sin inconvenientes. Listos para realizar los cambios. Ticket: 92751-IX-17. Solicitante: Rodrigo Arreola."}, {"k": "s2", "f": "2026-04-30T08:30", "d": "Buen dia Carlos/Marce, se solicita apoyo con ajuste en BROKER de Exportacion: adicionar doble espacio en IV22 y declarar costo unitario con decimal. Adicional, validar por qué no se visualiza información del Destino Final."}, {"k": "s2", "f": "2026-05-04T10:17", "d": "Seguimiento al punto pendiente. ¿Han tenido oportunidad de revisarlo?"}, {"k": "s2", "f": "2026-05-08T08:00", "d": "¿Alguno cuenta con comentarios? El cliente ya solicita respuesta."}, {"k": "s2", "f": "2026-05-19T18:54", "d": "Se solicita apoyo con seguimiento. Cliente pide estatus y no se ha podido proporcionar actualización."}, {"k": "s2", "f": "2026-05-20T10:13", "d": "Algún comentario en seguimiento a este punto?"}, {"k": "s2", "f": "2026-05-20T10:26", "d": "Programación solicita confirmar posición del costo unitario y si se captura destino final en facturas de exportación."}, {"k": "s2", "f": "2026-05-20T11:04", "d": "Cliente solicita agregar 2 espacios al layout (posiciones 81 y 82, info a partir de posición 83). No forman parte del layout del Broker. Se requiere autorización de solicitud de cambio."}, {"k": "s2", "f": "2026-05-20T13:28", "d": "Se compartieron tiempos a Andrea para seguimiento con dirección."}, {"k": "s2", "f": "2026-05-21T11:26", "d": "Tiempo de programación: 2 horas. Se registrará en ticket 92751-IX-25 al autorizar."}, {"k": "s5", "f": "2026-05-26T08:02", "d": "Se solicitó autorización al cliente Rodrigo: 2 horas de programación y 1 hora de soporte. Se consultó si prefiere paquete de horas o facturación por evento."}, {"k": "s6", "f": "2026-06-08T09:05", "d": "Cliente confirma que cuenta con paquete de 10 horas disponible para realizar los cambios solicitados."}], "id": "mqg8sqg82g2adiejdmb", "created": "2026-06-16T06:09:47.240Z"}];}
+function persist(){try{localStorage.setItem('tracker_v6',JSON.stringify(items));}catch(e){}}
+
+var SKEYS=['s1','s2','s3','s4','s5','s6','s7','s8'];
+var SNAME={s1:'Solicitud cliente',s2:'Seguim. programación',s3:'Seguim. supervisor',s4:'Confirm. Ventas',s5:'Seguim. cliente',s6:'Confirmación cliente',s7:'Autor. horas',s8:'Cierre'};
+var SICON={s1:'ti-flag',s2:'ti-code',s3:'ti-user-star',s4:'ti-building-store',s5:'ti-messages',s6:'ti-circle-check',s7:'ti-clock-check',s8:'ti-flag-check'};
+var PRILAB={critica:'Crítica',alta:'Alta',media:'Media',baja:'Baja'};
+var PRIORD={critica:0,alta:1,media:2,baja:3};
+
+function isClosed(i){
+  return !!(i.logs&&i.logs.some(function(l){return l.k==='s8';}));
+}
+
+function lastStageInfo(item){
+  var logs=item.logs||[];
+  if(!logs.length) return {label:'Pendiente — sin seguimiento',cls:'p-stage-0',pct:0};
+  var keys=activeKeys(item);
+  var done=keys.filter(function(k){return logs.some(function(l){return l.k===k;});});
+  var pct=Math.round((done.length/keys.length)*100);
+  if(isClosed(item)) return {label:'Cerrado',cls:'p-stage-done',pct:100};
+  var last=done.length?done[done.length-1]:'';
+  return {label:last?SNAME[last]:'Pendiente — sin seguimiento',cls:last?'p-stage':'p-stage-0',pct:pct};
+}
+
+function activeKeys(item){
+  return SKEYS.filter(function(k){
+    if(k==='s4'&&!item.ventas) return false;
+    if(k==='s7'&&item.tipo!=='dev') return false;
+    return true;
+  });
+}
+
+
+function diasBadge(item){
+  var logs=item.logs||[];
+  if(!logs.length) return '<span class="dias-badge dias-viejo"><i class="ti ti-clock-x" style="font-size:10px"></i> Sin seguimiento</span>';
+  var sorted=logs.slice().sort(function(a,b){return (b.f||'').localeCompare(a.f||'');});
+  var last=sorted[0].f;
+  if(!last) return '';
+  var diff=Math.floor((Date.now()-new Date(last))/(1000*60*60*24));
+  if(diff===0) return '<span class="dias-badge dias-hoy"><i class="ti ti-check" style="font-size:10px"></i> Hoy</span>';
+  if(diff===1) return '<span class="dias-badge dias-ayer"><i class="ti ti-clock" style="font-size:10px"></i> Ayer</span>';
+  if(diff<=3) return '<span class="dias-badge dias-2"><i class="ti ti-clock" style="font-size:10px"></i> Hace '+diff+' días</span>';
+  if(diff<=7) return '<span class="dias-badge dias-semana"><i class="ti ti-clock" style="font-size:10px"></i> Hace '+diff+' días</span>';
+  return '<span class="dias-badge dias-viejo"><i class="ti ti-alert-circle" style="font-size:10px"></i> Hace '+diff+' días</span>';
+}
+
+function sortOpen(arr){
+  return arr.slice().sort(function(a,b){
+    var dp=PRIORD[a.priority||'media']-PRIORD[b.priority||'media'];
+    if(dp!==0) return dp;
+    function lastLog(item){
+      var logs=item.logs||[];
+      if(!logs.length) return '0000-00-00';
+      return logs.slice().sort(function(x,y){return (y.f||'').localeCompare(x.f||'');})[0].f||'0000-00-00';
+    }
+    return lastLog(a).localeCompare(lastLog(b));
+  });
+}
+
+function ts(d){
+  if(!d) return '';
+  try{return new Date(d).toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return d;}
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function now(){return new Date().toISOString().slice(0,16);}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderCard(item){
+  var sl=lastStageInfo(item);
+  var isOpen=expanded[item.id];
+  var priBar='pri-'+(item.priority||'media')+'-bar';
+  var pills='<span class="pill p-'+(item.priority||'media')+'">'+PRILAB[item.priority||'media']+'</span>';
+  if(item.area) pills+=' <span class="pill p-area">'+esc(item.area)+'</span>';
+  if(item.tipo==='dev') pills+=' <span class="pill p-dev">Desarrollo</span>';
+  if(item.ventas) pills+=' <span class="pill p-ventas">Ventas</span>';
+  if(item.esError) pills+=' <span class="pill p-error"><i class="ti ti-bug" style="font-size:10px"></i> Error</span>';
+  pills+=' <span class="pill '+sl.cls+'">'+sl.label+'</span>';
+  pills+=' '+diasBadge(item);
+
+  var bodyHtml='';
+  if(isOpen){
+    var logs=(item.logs||[]).slice().sort(function(a,b){return new Date(a.f)-new Date(b.f);});
+    var histRows=logs.map(function(l,li){
+      return '<div class="hist-row">'+
+        '<span class="hist-date">'+ts(l.f)+'</span>'+
+        '<span class="hist-tag ht-'+l.k+'">'+SNAME[l.k]+'</span>'+
+        '<span class="hist-det">'+esc(l.d)+'</span>'+
+        '<span class="hist-del" onclick="delLog(\''+item.id+'\','+li+');event.stopPropagation()" title="Eliminar entrada"><i class="ti ti-x" style="font-size:11px"></i></span>'+
+      '</div>';
+    }).join('');
+    var notesHtml=item.notes?'<div style="font-size:12px;color:var(--text3);padding:5px 0 0"><i class="ti ti-note" style="font-size:12px"></i> '+esc(item.notes)+'</div>':'';
+    bodyHtml='<div class="card-body">'+
+      '<div class="hist-title"><i class="ti ti-timeline" style="font-size:12px" aria-hidden="true"></i> Historial de seguimiento</div>'+
+      (histRows||'<div style="font-size:12px;color:var(--text3);padding:4px 0">Sin seguimiento registrado.</div>')+
+      notesHtml+
+      '<div class="card-actions">'+
+        '<button class="btn btn-sm" onclick="openLM(\''+item.id+'\');event.stopPropagation()"><i class="ti ti-plus"></i> Seguimiento</button>'+
+        '<button class="btn btn-sm" onclick="openEdit(\''+item.id+'\');event.stopPropagation()"><i class="ti ti-edit"></i> Editar</button>'+
+        (!isClosed(item)?'<button class="btn btn-sm" onclick="quickClose(\''+item.id+'\');event.stopPropagation()"><i class="ti ti-check"></i> Cerrar</button>':'')+
+        '<button class="btn btn-sm" onclick="copyCard(\''+item.id+'\');event.stopPropagation()"><i class="ti ti-copy"></i> Copiar evidencia</button>'+
+        '<button class="btn btn-sm" style="color:var(--red);border-color:var(--red-bg)" onclick="del(\''+item.id+'\');event.stopPropagation()"><i class="ti ti-trash"></i></button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  return '<div class="card">'+
+    '<div class="card-top-row" onclick="toggleCard(\''+item.id+'\')" >'+
+      '<div class="pri-bar '+priBar+'"></div>'+
+      '<div class="card-top-inner">'+
+        '<div class="card-title">'+esc(item.desc)+'</div>'+
+        '<div class="card-pills">'+pills+'</div>'+
+        '<div class="progress-bar"><div class="progress-fill" style="width:'+sl.pct+'%"></div></div>'+
+      '</div>'+
+      '<div class="card-chevron"><i class="ti ti-chevron-'+(isOpen?'up':'down')+'" aria-hidden="true"></i></div>'+
+    '</div>'+
+    bodyHtml+
+  '</div>';
+}
+
+function renderStats(){
+  var open=items.filter(function(i){return !isClosed(i);});
+  var clo=items.filter(function(i){return isClosed(i);}).length;
+  var crit=open.filter(function(i){return i.priority==='critica';}).length;
+  var alta=open.filter(function(i){return i.priority==='alta';}).length;
+  var dev=open.filter(function(i){return i.tipo==='dev';}).length;
+  var vent=open.filter(function(i){return i.ventas;}).length;
+  var err=items.filter(function(i){return i.esError;}).length;
+  document.getElementById('stats').innerHTML=
+    '<div class="stat"><div class="stat-l">Abiertos</div><div class="stat-v">'+open.length+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Críticos</div><div class="stat-v" style="color:#E24B4A">'+crit+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Alta prior.</div><div class="stat-v" style="color:var(--red)">'+alta+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Desarrollo</div><div class="stat-v" style="color:var(--coral)">'+dev+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Con Ventas</div><div class="stat-v" style="color:var(--teal)">'+vent+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Errores</div><div class="stat-v" style="color:var(--red)">'+err+'</div></div>'+
+    '<div class="stat"><div class="stat-l">Cerrados</div><div class="stat-v" style="color:var(--green)">'+clo+'</div></div>';
+}
+
+function getFiltered(){
+  var q=(document.getElementById('search').value||'').toLowerCase().trim();
+  var data=items.filter(function(i){return !isClosed(i);});
+  if(curFilter==='critica') data=data.filter(function(i){return i.priority==='critica';});
+  else if(curFilter==='alta') data=data.filter(function(i){return i.priority==='alta';});
+  else if(curFilter==='dev') data=data.filter(function(i){return i.tipo==='dev';});
+  else if(curFilter==='ventas') data=data.filter(function(i){return i.ventas;});
+  else if(curFilter==='error') data=data.filter(function(i){return i.esError;});
+  if(q) data=data.filter(function(i){return (i.desc||'').toLowerCase().indexOf(q)>=0||(i.area||'').toLowerCase().indexOf(q)>=0;});
+  return sortOpen(data);
+}
+
+function render(){
+  renderStats();
+  var data=getFiltered();
+  var total=data.length;
+  var maxP=Math.max(0,Math.ceil(total/PER)-1);
+  if(page>maxP) page=maxP;
+  var slice=data.slice(page*PER,(page+1)*PER);
+  var el=document.getElementById('list');
+  if(!slice.length){
+    el.innerHTML='<div class="empty"><i class="ti ti-inbox" style="font-size:30px;display:block;margin-bottom:8px"></i>'+(items.filter(function(i){return !isClosed(i);}).length===0&&curFilter==='all'?'No hay pendientes. Presiona <strong>+ Nuevo pendiente</strong> para comenzar.':'Sin resultados.')+'</div>';
+    document.getElementById('pager').innerHTML='';
+  } else {
+    el.innerHTML=slice.map(renderCard).join('');
+    var pg=document.getElementById('pager');
+    if(total<=PER) pg.innerHTML='<span>'+total+' pendiente'+(total!==1?'s':'')+' abierto'+(total!==1?'s':'')+'</span>';
+    else pg.innerHTML='<button class="btn btn-sm" onclick="goPage('+(page-1)+')" '+(page===0?'disabled':'')+'>← Anterior</button><span>Pág. '+(page+1)+' / '+(maxP+1)+' · '+total+'</span><button class="btn btn-sm" onclick="goPage('+(page+1)+')" '+(page>=maxP?'disabled':'')+'>Siguiente →</button>';
+  }
+  renderClosed();
+}
+
+function renderClosed(){
+  var closed=sortOpen(items.filter(function(i){return isClosed(i);}));
+  document.getElementById('closed-label').textContent=(showClosed?'Ocultar':'Ver')+' cerrados ('+closed.length+')';
+  if(!showClosed){document.getElementById('closed-list').style.display='none';return;}
+  document.getElementById('closed-list').style.display='block';
+  document.getElementById('closed-list').innerHTML=closed.length?closed.map(renderCard).join(''):'<div class="empty">Sin cerrados aún.</div>';
+}
+
+function toggleClosed(){showClosed=!showClosed;document.getElementById('closed-icon').className='ti ti-chevron-'+(showClosed?'down':'right');renderClosed();}
+function toggleCard(id){expanded[id]=!expanded[id];render();}
+function goPage(p){page=p;render();}
+function delLog(itemId,logIdx){
+  var idx=items.findIndex(function(i){return i.id===itemId;});
+  if(idx<0) return;
+  var sorted=(items[idx].logs||[]).slice().sort(function(a,b){return new Date(a.f)-new Date(b.f);});
+  var entry=sorted[logIdx];
+  if(!entry||!confirm('¿Eliminar esta entrada del historial?')) return;
+  items[idx].logs=items[idx].logs.filter(function(l){return l!==entry;});
+  persist();render();
+}
+
+/* ---- FORM stages ---- */
+function toggleDev(){buildStagesForm(document.getElementById('f-tipo').value==='dev',document.getElementById('f-ventas-chk')&&document.getElementById('f-ventas-chk').checked);}
+function toggleVentas(){buildStagesForm(document.getElementById('f-tipo').value==='dev',document.getElementById('f-ventas-chk').checked);}
+function toggleError(){
+  var v=document.getElementById('f-es-error').value;
+  document.getElementById('error-section').style.display=v==='si'?'block':'none';
+}
+
+function buildStagesForm(isDev,hasVentas){
+  var defs=[
+    {k:'s1',label:'Etapa 1 — Solicitud inicial del cliente',icon:'ti-flag',required:true},
+    {k:'s2',label:'Etapa 2 — Seguimiento con programación',icon:'ti-code'},
+    {k:'s3',label:'Etapa 3 — Seguimiento con supervisor',icon:'ti-user-star'},
+    {k:'s4',label:'Etapa 4 — Confirmación con Ventas',icon:'ti-building-store',optional:true,chk:'f-ventas-chk'},
+    {k:'s5',label:'Etapa 5 — Seguimiento con el cliente',icon:'ti-messages'},
+    {k:'s6',label:'Etapa 6 — Confirmación del cliente',icon:'ti-circle-check'},
+    {k:'s7',label:'Etapa 7 — Autorización de horas (desarrollo)',icon:'ti-clock-check',devOnly:true},
+    {k:'s8',label:'Etapa 8 — Cierre',icon:'ti-flag-check',isCierre:true},
+  ];
+
+  var html='';
+  defs.forEach(function(def){
+    if(def.devOnly&&!isDev) return;
+    var entries=formEntries[def.k]||[{f:def.k==='s1'?now():'',d:''}];
+    formEntries[def.k]=entries;
+
+    var borderStyle=def.isCierre?'border-color:var(--green)':'';
+    var titleStyle=def.isCierre?'color:var(--green-t)':'';
+    var labelStyle=def.isCierre?'color:var(--green-t)':'';
+
+    html+='<div class="sform" style="'+borderStyle+'">';
+    html+='<div class="sform-title" style="'+titleStyle+'"><i class="ti '+def.icon+'" aria-hidden="true"></i> '+def.label+'</div>';
+
+    if(def.optional){
+      html+='<label class="opt-toggle"><input type="checkbox" id="f-ventas-chk" onchange="toggleVentas()" '+(hasVentas?'checked':'')+'>Aplica seguimiento con Ventas</label>';
+      if(!hasVentas){html+='</div>';return;}
+    }
+
+    html+='<div id="entries-'+def.k+'">';
+    entries.forEach(function(e,ei){
+      html+=entryRowHtml(def.k,ei,e,labelStyle);
+    });
+    html+='</div>';
+    html+='<button class="add-entry-btn" onclick="addEntry(\''+def.k+'\');return false"><i class="ti ti-plus" style="font-size:12px"></i> Agregar seguimiento en esta etapa</button>';
+    html+='</div>';
+  });
+
+  document.getElementById('stages-form').innerHTML=html;
+}
+
+function entryRowHtml(k,ei,e,labelStyle){
+  return '<div class="entry-row" id="erow-'+k+'-'+ei+'">'+
+    '<div class="entry-row-fields">'+
+      '<input type="datetime-local" value="'+esc(e.f||'')+'" placeholder="Fecha" oninput="updateEntry(\''+k+'\','+ei+',\'f\',this.value)" style="'+labelStyle+'">'+
+      '<textarea placeholder="Detalle..." oninput="updateEntry(\''+k+'\','+ei+',\'d\',this.value)" style="'+labelStyle+'">'+esc(e.d||'')+'</textarea>'+
+    '</div>'+
+    (ei>0?'<span style="cursor:pointer;color:var(--text3);padding:2px;font-size:13px" onclick="removeEntry(\''+k+'\','+ei+')" title="Quitar"><i class="ti ti-x"></i></span>':'')+
+  '</div>';
+}
+
+function updateEntry(k,ei,field,val){
+  if(formEntries[k]&&formEntries[k][ei]) formEntries[k][ei][field]=val;
+}
+
+function addEntry(k){
+  if(!formEntries[k]) formEntries[k]=[];
+  formEntries[k].push({f:now(),d:''});
+  rebuildEntries(k);
+}
+
+function removeEntry(k,ei){
+  if(formEntries[k]) formEntries[k].splice(ei,1);
+  rebuildEntries(k);
+}
+
+function rebuildEntries(k){
+  var wrap=document.getElementById('entries-'+k);
+  if(!wrap) return;
+  wrap.innerHTML=(formEntries[k]||[]).map(function(e,ei){return entryRowHtml(k,ei,e,'');}).join('');
+}
+
+function clearForm(){
+  formEntries={};
+  ['f-desc','f-area','f-notes'].forEach(function(id){var el=document.getElementById(id);if(el) el.value='';});
+  document.getElementById('f-pri').value='media';
+  document.getElementById('f-tipo').value='soporte';
+  document.getElementById('f-es-error').value='no';
+  document.getElementById('error-section').style.display='none';
+  var et=document.getElementById('f-error-tipo');if(et) et.value='';
+  var eq=document.getElementById('f-error-quien');if(eq) eq.value='';
+  var ed=document.getElementById('f-error-desc');if(ed) ed.value='';
+  SKEYS.forEach(function(k){formEntries[k]=[{f:k==='s1'?now():'',d:''}];});
+  buildStagesForm(false,false);
+}
+
+function openNew(){
+  editId=null;
+  clearForm();
+  document.getElementById('modal-title').textContent='Nuevo pendiente';
+  document.getElementById('modal').classList.add('show');
+}
+
+function openEdit(id){
+  var item=items.find(function(i){return i.id===id;});
+  editId=id;
+  formEntries={};
+  document.getElementById('modal-title').textContent='Editar pendiente';
+  document.getElementById('f-desc').value=item.desc||'';
+  document.getElementById('f-area').value=item.area||'';
+  document.getElementById('f-pri').value=item.priority||'media';
+  document.getElementById('f-tipo').value=item.tipo||'soporte';
+  document.getElementById('f-notes').value=item.notes||'';
+  document.getElementById('f-es-error').value=item.esError?'si':'no';
+  document.getElementById('error-section').style.display=item.esError?'block':'none';
+  var et2=document.getElementById('f-error-tipo');if(et2) et2.value=(item.errorTipo||'');
+  var eq2=document.getElementById('f-error-quien');if(eq2) eq2.value=(item.errorQuien||'');
+  var ed2=document.getElementById('f-error-desc');if(ed2) ed2.value=(item.errorDesc||'');
+  var logs=item.logs||[];
+  SKEYS.forEach(function(k){
+    var kLogs=logs.filter(function(l){return l.k===k;});
+    formEntries[k]=kLogs.length?kLogs.map(function(l){return {f:l.f||'',d:l.d||''};}):[{f:k==='s1'?now():'',d:''}];
+  });
+  buildStagesForm(item.tipo==='dev',!!item.ventas);
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+function save(){
+  var desc=document.getElementById('f-desc').value.trim();
+  if(!desc){alert('La descripción es obligatoria.');return;}
+  var isDev=document.getElementById('f-tipo').value==='dev';
+  var ventasChk=document.getElementById('f-ventas-chk');
+  var hasVentas=ventasChk?ventasChk.checked:false;
+  var logs=[];
+  SKEYS.forEach(function(k){
+    if(k==='s4'&&!hasVentas) return;
+    if(k==='s7'&&!isDev) return;
+    (formEntries[k]||[]).forEach(function(e){
+      if(e.f||e.d.trim()) logs.push({k:k,f:e.f,d:e.d.trim()});
+    });
+  });
+  logs.sort(function(a,b){return new Date(a.f||0)-new Date(b.f||0);});
+  var esError=document.getElementById('f-es-error').value==='si';
+  var obj={desc:desc,area:document.getElementById('f-area').value,priority:document.getElementById('f-pri').value,tipo:document.getElementById('f-tipo').value,ventas:hasVentas,notes:document.getElementById('f-notes').value,logs:logs,esError:esError,errorTipo:esError?(document.getElementById('f-error-tipo').value||''):'',errorQuien:esError?(document.getElementById('f-error-quien').value||''):'',errorDesc:esError?(document.getElementById('f-error-desc').value||''):''};
+  if(editId){
+    var idx=items.findIndex(function(i){return i.id===editId;});
+    items[idx]=Object.assign({},items[idx],obj);
+  } else {
+    obj.id=uid();obj.created=new Date().toISOString();
+    items.unshift(obj);
+  }
+  persist();closeModal();render();
+}
+
+function openLM(id){
+  logTarget=id;
+  document.getElementById('lm-date').value=now();
+  document.getElementById('lm-det').value='';
+  document.getElementById('lm-type').value='s2';
+  document.getElementById('log-modal').classList.add('show');
+}
+function closeLM(){document.getElementById('log-modal').classList.remove('show');}
+
+function saveLM(){
+  var det=document.getElementById('lm-det').value.trim();
+  if(!det){alert('Agrega el detalle.');return;}
+  var k=document.getElementById('lm-type').value;
+  var f=document.getElementById('lm-date').value||new Date().toISOString();
+  var idx=items.findIndex(function(i){return i.id===logTarget;});
+  if(!items[idx].logs) items[idx].logs=[];
+  items[idx].logs.push({k:k,f:f,d:det});
+  items[idx].logs.sort(function(a,b){return new Date(a.f||0)-new Date(b.f||0);});
+  if(k==='s4') items[idx].ventas=true;
+  persist();closeLM();render();
+}
+
+function quickClose(id){
+  var idx=items.findIndex(function(i){return i.id===id;});
+  if(!items[idx].logs) items[idx].logs=[];
+  items[idx].logs.push({k:'s8',f:new Date().toISOString(),d:'Cerrado manualmente'});
+  items[idx].logs.sort(function(a,b){return new Date(a.f||0)-new Date(b.f||0);});
+  persist();render();
+}
+
+function del(id){if(!confirm('¿Eliminar este pendiente?')) return;items=items.filter(function(i){return i.id!==id;});persist();render();}
+
+function copyCard(id){
+  var item=items.find(function(i){return i.id===id;});if(!item) return;
+  var logs=(item.logs||[]).slice().sort(function(a,b){return new Date(a.f||0)-new Date(b.f||0);});
+  var txt='EVIDENCIA DE PENDIENTE — '+new Date().toLocaleString('es-MX')+'\n'+'='.repeat(55)+'\n';
+  txt+='Asunto: '+item.desc+'\n';
+  txt+='Estado: '+(isClosed(item)?'CERRADO':'PENDIENTE')+'\n';
+  txt+='Prioridad: '+PRILAB[item.priority||'media']+'  |  Tipo: '+(item.tipo==='dev'?'Desarrollo':'Soporte')+'\n';
+  if(item.area) txt+='Área / empresa: '+item.area+'\n';
+  txt+='Creado: '+ts(item.created)+'\n';
+  if(item.esError) t+='ERROR — Tipo: '+(item.errorTipo||'N/A')+'  |  Reportó: '+(item.errorQuien||'N/A')+'  |  '+( item.errorDesc||'')+'\n';
+  if(item.esError) txt+='TIPO DE ERROR: '+(item.errorTipo||'N/A')+'  |  Reportado por: '+(item.errorQuien||'N/A')+'\nDescripción del error: '+(item.errorDesc||'')+'\n';
+  txt+='\nHISTORIAL DE SEGUIMIENTO:\n';
+  if(logs.length) logs.forEach(function(l){txt+='  '+ts(l.f)+' ['+SNAME[l.k]+']: '+l.d+'\n';});
+  else txt+='  Sin seguimiento registrado.\n';
+  if(item.notes) txt+='\nNotas: '+item.notes+'\n';
+  txt+='='.repeat(55)+'\n';
+  navigator.clipboard.writeText(txt).then(function(){alert('Evidencia copiada al portapapeles.');}).catch(function(){prompt('Copia este texto:',txt);});
+}
+
+function exportTxt(){
+  if(!items.length){alert('No hay pendientes.');return;}
+  var open=sortOpen(items.filter(function(i){return !isClosed(i);}));
+  var closed=sortOpen(items.filter(function(i){return isClosed(i);}));
+  var txt='REPORTE DE PENDIENTES\nGenerado: '+new Date().toLocaleString('es-MX')+'\n'+'='.repeat(60)+'\n\nABIERTOS ('+open.length+')\n\n';
+  open.forEach(function(i){txt+=itemTxt(i);});
+  txt+='CERRADOS ('+closed.length+')\n\n';
+  closed.forEach(function(i){txt+=itemTxt(i);});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download='evidencia_'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click();
+}
+
+function itemTxt(item){
+  var logs=(item.logs||[]).slice().sort(function(a,b){return new Date(a.f||0)-new Date(b.f||0);});
+  var t='PENDIENTE: '+item.desc+'\n';
+  t+='Estado: '+(isClosed(item)?'CERRADO':'ABIERTO')+'  |  Prioridad: '+PRILAB[item.priority||'media']+'  |  Tipo: '+(item.tipo==='dev'?'Desarrollo':'Soporte')+'\n';
+  if(item.area) t+='Área: '+item.area+'\n';
+  t+='Creado: '+ts(item.created)+'\n';
+  if(item.esError) t+='ERROR — Tipo: '+(item.errorTipo||'N/A')+'  |  Reportó: '+(item.errorQuien||'N/A')+'  |  '+( item.errorDesc||'')+'\n';
+  if(logs.length) logs.forEach(function(l){t+='  '+ts(l.f)+' ['+SNAME[l.k]+']: '+l.d+'\n';});
+  if(item.notes) t+='Notas: '+item.notes+'\n';
+  t+='\n';
+  return t;
+}
+
+document.getElementById('filters').addEventListener('click',function(e){
+  var b=e.target.closest('.fb');if(!b) return;
+  document.querySelectorAll('.fb').forEach(function(x){x.classList.remove('on');});
+  b.classList.add('on');curFilter=b.dataset.f;page=0;render();
+});
+
+function exportExcel(){
+  var btn=document.getElementById('btn-excel');
+  if(btn){btn.textContent='⏳ Generando...';btn.disabled=true;}
+  if(!items.length){alert('No hay pendientes.');if(btn){btn.innerHTML='<i class="ti ti-table-export"></i> Exportar Excel';btn.disabled=false;}return;}
+
+  var SNAME={s1:'Solicitud cliente',s2:'Seguim. programación',s3:'Seguim. supervisor',
+    s4:'Confirm. Ventas',s5:'Seguim. cliente',s6:'Confirmación cliente',
+    s7:'Autor. horas',s8:'Cierre'};
+
+  function lastDate(item,stage){
+    var logs=(item.logs||[]);
+    if(stage) logs=logs.filter(function(l){return l.k===stage;});
+    if(!logs.length) return '';
+    logs=logs.slice().sort(function(a,b){return (b.f||'').localeCompare(a.f||'');});
+    var f=logs[0].f||'';if(!f) return '';
+    try{var d=new Date(f);return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();}catch(e){return '';}
+  }
+  function lastNote(item,stage){
+    var logs=(item.logs||[]).filter(function(l){return l.k===stage;});
+    if(!logs.length) return '';
+    logs=logs.slice().sort(function(a,b){return (b.f||'').localeCompare(a.f||'');});
+    return (logs[0].d||'').substring(0,220);
+  }
+  function lastStageName(item){
+    var logs=item.logs||[];
+    var done=['s1','s2','s3','s4','s5','s6','s7','s8'].filter(function(k){return logs.some(function(l){return l.k===k;});});
+    return done.length?SNAME[done[done.length-1]]:'Sin seguimiento';
+  }
+  function isClosed(item){return !!(item.logs&&item.logs.some(function(l){return l.k==='s8';}));}
+
+  var openItems=items.filter(function(i){return !isClosed(i);}).slice().sort(function(a,b){return (a.created||'').localeCompare(b.created||'');});
+  var closedItems=items.filter(function(i){return isClosed(i);});
+
+  var today=new Date();
+  var dd=today.getDate().toString().padStart(2,'0');
+  var mm=(today.getMonth()+1).toString().padStart(2,'0');
+  var yyyy=today.getFullYear();
+  var todayShort=dd+'/'+mm+'/'+yyyy;
+  var months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var todayLong=today.getDate()+' de '+months[today.getMonth()]+' de '+yyyy;
+
+  // ── Colors ──────────────────────────────────────────────────────────────
+  var C={
+    DARK:{argb:'FF1B1464'},MID:{argb:'FF2E4057'},ACCENT:{argb:'FF048A81'},
+    SOFT:{argb:'FFEBF5FB'},WHITE:{argb:'FFFFFFFF'},
+    GREEN:{argb:'FF1E8449'},RED:{argb:'FFC0392B'},AMBER:{argb:'FFD68910'},
+    PURPLE:{argb:'FF6C3483'},BLUE:{argb:'FF1A5276'},GRAY:{argb:'FFF2F4F4'},
+    BORD:{argb:'FFC0C0C0'},DARK_T:{argb:'FF1B1464'},BLACK:{argb:'FF000000'}
+  };
+
+  function bdr(){return {top:{style:'thin',color:C.BORD},bottom:{style:'thin',color:C.BORD},left:{style:'thin',color:C.BORD},right:{style:'thin',color:C.BORD}};}
+
+  var wb=new ExcelJS.Workbook();
+  wb.creator='Tracker I-Xport';
+  wb.created=new Date();
+
+  // ── SHEET 1 ──────────────────────────────────────────────────────────────
+  var ws=wb.addWorksheet('Pendientes Programación',{views:[{state:'frozen',ySplit:4}]});
+
+  ws.columns=[
+    {key:'num',  width:5},  {key:'cli',  width:14}, {key:'sol',  width:32},
+    {key:'desc', width:54}, {key:'tipo', width:12}, {key:'fs',   width:13},
+    {key:'fp',   width:13}, {key:'fult', width:13}, {key:'etap', width:25},
+    {key:'ase',  width:18}, {key:'rep',  width:18}, {key:'est',  width:13},
+    {key:'err',  width:7},  {key:'terr', width:24}
+  ];
+
+  // Row 1: title
+  var r1=ws.addRow(['REPORTE DE PENDIENTES — PROGRAMACIÓN I-XPORT']);
+  ws.mergeCells(1,1,1,14);
+  r1.height=30;
+  r1.getCell(1).font={name:'Arial',size:14,bold:true,color:C.WHITE};
+  r1.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:C.DARK};
+  r1.getCell(1).alignment={horizontal:'center',vertical:'middle'};
+
+  // Row 2: subtitle
+  var r2=ws.addRow(['Generado: '+todayLong+'     |     Pendientes activos: '+openItems.length+'     |     Fecha de corte: '+todayShort]);
+  ws.mergeCells(2,1,2,14);
+  r2.height=18;
+  r2.getCell(1).font={name:'Arial',size:10,italic:true,color:C.WHITE};
+  r2.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:C.MID};
+  r2.getCell(1).alignment={horizontal:'center',vertical:'middle'};
+
+  // Row 3: spacer
+  var r3=ws.addRow(['']);ws.mergeCells(3,1,3,14);r3.height=5;
+  r3.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:C.WHITE};
+
+  // Row 4: headers
+  var HDRS=['#','Cliente','Solicitud','Descripción / Contexto','Tipo',
+    'Fecha\nSolicitud','Envío\nProg.','Último\nSeguim.',
+    'Etapa Actual','Asesor','Reportado a','Estatus','Error','Tipo de Error'];
+  var r4=ws.addRow(HDRS);
+  r4.height=36;
+  r4.eachCell(function(cell){
+    cell.font={name:'Arial',size:10,bold:true,color:C.WHITE};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:C.ACCENT};
+    cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    cell.border=bdr();
+  });
+
+  // Data rows
+  openItems.forEach(function(item,idx){
+    var bg=idx%2===0?C.WHITE:C.SOFT;
+    var tipo=item.tipo==='dev'?'Desarrollo':'Soporte';
+    var tipoBg=item.tipo==='dev'?C.PURPLE:C.BLUE;
+    var asgn=item.asignacion==='asignado'?'Asignado':'En espera';
+    var asgnBg=item.asignacion==='asignado'?C.GREEN:C.AMBER;
+    var esErr=item.esError?true:false;
+
+    var row=ws.addRow([
+      idx+1, item.area||'', (item.desc||'').toUpperCase().substring(0,38),
+      lastNote(item,'s1')||item.desc||'', tipo,
+      lastDate(item,'s1'), lastDate(item,'s2'), lastDate(item),
+      lastStageName(item), item.asesor||'', item.reportado||'',
+      asgn, esErr?'Sí':'No', item.errorTipo||''
+    ]);
+    row.height=22;
+
+    row.eachCell(function(cell,colNum){
+      cell.border=bdr();
+      cell.font={name:'Arial',size:9,color:C.BLACK};
+      cell.fill={type:'pattern',pattern:'solid',fgColor:bg};
+      cell.alignment={horizontal:'left',vertical:'middle'};
+
+      if(colNum===1){cell.font={name:'Arial',size:10,bold:true,color:C.BLACK};cell.alignment={horizontal:'center',vertical:'middle'};}
+      else if(colNum===2){cell.font={name:'Arial',size:10,bold:true,color:C.DARK_T};}
+      else if(colNum===3){cell.font={name:'Arial',size:9,bold:true,color:C.DARK_T};}
+      else if(colNum===4){cell.alignment={horizontal:'left',vertical:'middle',wrapText:true};cell.font={name:'Arial',size:9,color:{argb:'FF333333'}};}
+      else if(colNum===5){cell.font={name:'Arial',size:9,bold:true,color:C.WHITE};cell.fill={type:'pattern',pattern:'solid',fgColor:tipoBg};cell.alignment={horizontal:'center',vertical:'middle'};}
+      else if(colNum>=6&&colNum<=8){cell.alignment={horizontal:'center',vertical:'middle'};cell.font={name:'Arial',size:9,color:{argb:'FF444444'}};}
+      else if(colNum===12){cell.font={name:'Arial',size:9,bold:true,color:C.WHITE};cell.fill={type:'pattern',pattern:'solid',fgColor:asgnBg};cell.alignment={horizontal:'center',vertical:'middle'};}
+      else if(colNum===13){
+        cell.font={name:'Arial',size:9,bold:true,color:esErr?C.WHITE:{argb:'FF555555'}};
+        cell.fill={type:'pattern',pattern:'solid',fgColor:esErr?C.RED:bg};
+        cell.alignment={horizontal:'center',vertical:'middle'};
+      }
+    });
+  });
+
+  // Total row
+  var totRow=ws.addRow(['  Total de pendientes activos: '+openItems.length,'','','']);
+  ws.mergeCells(totRow.number,1,totRow.number,4);
+  totRow.height=18;
+  totRow.eachCell(function(cell){
+    cell.fill={type:'pattern',pattern:'solid',fgColor:C.DARK};
+    cell.font={name:'Arial',size:10,bold:true,color:C.WHITE};
+  });
+  totRow.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+
+  // ── SHEET 2: Resumen ─────────────────────────────────────────────────────
+  var ws2=wb.addWorksheet('Resumen');
+  ws2.columns=[{width:30},{width:14}];
+
+  var s2r1=ws2.addRow(['RESUMEN EJECUTIVO DE PENDIENTES']);
+  ws2.mergeCells(1,1,1,2);s2r1.height=26;
+  s2r1.getCell(1).font={name:'Arial',size:13,bold:true,color:C.WHITE};
+  s2r1.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:C.DARK};
+  s2r1.getCell(1).alignment={horizontal:'center',vertical:'middle'};
+
+  var s2r2=ws2.addRow(['Generado: '+todayLong]);
+  ws2.mergeCells(2,1,2,2);s2r2.height=16;
+  s2r2.getCell(1).font={name:'Arial',size:10,italic:true,color:C.WHITE};
+  s2r2.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:C.MID};
+  s2r2.getCell(1).alignment={horizontal:'center',vertical:'middle'};
+
+  function addSection2(title,rows,hColor){
+    ws2.addRow(['']);
+    var hr=ws2.addRow([' '+title]);
+    ws2.mergeCells(hr.number,1,hr.number,2);hr.height=20;
+    hr.getCell(1).font={name:'Arial',size:10,bold:true,color:C.WHITE};
+    hr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:hColor||C.ACCENT};
+    hr.getCell(1).alignment={horizontal:'left',vertical:'middle'};
+    rows.forEach(function(r){
+      var dr=ws2.addRow(['  '+r[0],r[1]]);dr.height=18;
+      dr.getCell(1).font={name:'Arial',size:10,color:{argb:'FF333333'}};
+      dr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:C.GRAY};
+      dr.getCell(2).font={name:'Arial',size:12,bold:true,color:C.DARK_T};
+      dr.getCell(2).alignment={horizontal:'center',vertical:'middle'};
+    });
+  }
+
+  addSection2('TOTALES GENERALES',[
+    ['Total de pendientes',items.length],['Abiertos',openItems.length],['Cerrados',closedItems.length]
+  ],C.DARK);
+  addSection2('POR PRIORIDAD',[
+    ['Crítica',items.filter(function(i){return i.priority==='critica';}).length],
+    ['Alta',items.filter(function(i){return i.priority==='alta';}).length],
+    ['Media',items.filter(function(i){return i.priority==='media';}).length],
+    ['Baja',items.filter(function(i){return i.priority==='baja';}).length]
+  ],C.MID);
+  addSection2('POR TIPO',[
+    ['Soporte',items.filter(function(i){return i.tipo==='soporte';}).length],
+    ['Desarrollo',items.filter(function(i){return i.tipo==='dev';}).length]
+  ],C.MID);
+  addSection2('OTROS INDICADORES',[
+    ['Con Ventas',items.filter(function(i){return i.ventas;}).length],
+    ['Errores',items.filter(function(i){return i.esError;}).length],
+    ['Asignados',items.filter(function(i){return i.asignacion==='asignado';}).length],
+    ['En espera',items.filter(function(i){return i.asignacion!=='asignado';}).length]
+  ],C.MID);
+
+  // ── Download ─────────────────────────────────────────────────────────────
+  wb.xlsx.writeBuffer().then(function(buffer){
+    var blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='pendientes_programacion_'+yyyy+''+mm+''+dd+'.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+    if(btn){btn.innerHTML='<i class="ti ti-table-export"></i> Exportar Excel';btn.disabled=false;}
+  }).catch(function(err){
+    console.error(err);alert('Error al generar el Excel: '+err.message);
+    if(btn){btn.innerHTML='<i class="ti ti-table-export"></i> Exportar Excel';btn.disabled=false;}
+  });
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this) closeModal();});
+document.getElementById('log-modal').addEventListener('click',function(e){if(e.target===this) closeLM();});
+
+render();
+</script>
+</body>
+</html>
